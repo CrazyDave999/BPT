@@ -6,10 +6,10 @@
 using std::fstream;
 
 namespace CrazyDave {
-    template<size_t len>
+    template<size_t L>
     class String {
         // 可写字符串类
-        char str[len]{'\0'};
+        char str[L]{'\0'};
     public:
         String() = default;
 
@@ -64,10 +64,6 @@ namespace CrazyDave {
 
         bool operator<(const String &rhs) const {
             return strcmp(str, rhs.str) < 0;
-        }
-
-        friend int cmp_str(const String &lhs, const String &rhs) {
-            return strcmp(lhs.str, rhs.str);
         }
 
         friend std::istream &operator>>(std::istream &is, String &rhs) {

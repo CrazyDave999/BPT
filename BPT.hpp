@@ -4,9 +4,10 @@
 #include <cstring>
 #include "vector.hpp"
 #include "utils.hpp"
+#include <queue>
 
 namespace CrazyDave {
-    template<class key_t=String<65>, class value_t= int, const size_t M = 5, const size_t L = 5>
+    template<class key_t=String<65>, class value_t= int, const int M = 5, const int L = 5>
     class BPlusTree {
         struct Pair {
             key_t key{};
@@ -35,12 +36,12 @@ namespace CrazyDave {
         struct TreeNode;
 
         struct WTreeNode {
-            size_t pos{};
-            size_t ch_num = 0;
-            size_t block_pos = 0;
-            size_t size = 0;
+            int pos{};
+            int ch_num = 0;
+            int block_pos = 0;
+            int size = 0;
             Pair keys[M];
-            size_t ch_pos[M + 1]{}; // The position of children's STreeNode in tree_file.
+            int ch_pos[M + 1]{}; // The position of children's STreeNode in tree_file.
 
             WTreeNode() = default;
 
@@ -55,17 +56,17 @@ namespace CrazyDave {
         };
 
         struct TreeNode {
-            size_t pos{}; // The position of this node in tree_file.
+            int pos{}; // The position of this node in tree_file.
             int ch_num = 0; // If ch_num=0, this node is a leaf.
-            size_t block_pos{}; // The position of data in data_file. Only leaf node available.
-            size_t size = 0; // Size of block. Only leaf node available.
+            int block_pos{}; // The position of data in data_file. Only leaf node available.
+            int size = 0; // Size of block. Only leaf node available.
             Pair keys[M]; // At most M - 1 keys, leave one.
             TreeNode *children[M + 1];
             TreeNode *fa = nullptr;
 
-            TreeNode(TreeNode *_fa, size_t _ch_num, size_t _pos, size_t _block_pos = 0) : fa(_fa), ch_num(_ch_num),
-                                                                                          pos(_pos),
-                                                                                          block_pos(_block_pos) {}
+            TreeNode(TreeNode *_fa, int _ch_num, int _pos, int _block_pos = 0) : fa(_fa), ch_num(_ch_num),
+                                                                                 pos(_pos),
+                                                                                 block_pos(_block_pos) {}
 
             explicit TreeNode(const WTreeNode &wn) : pos(wn.pos), ch_num(wn.ch_num), block_pos(wn.block_pos),
                                                      size(wn.size) {
@@ -76,25 +77,25 @@ namespace CrazyDave {
         };
 
         struct Storage {
-            vector<size_t> st;
-            size_t size = 0;
-            size_t max_pos = 0;
-            size_t root_pos = 0;
+            vector<int> st;
+            int size = 0;
+            int max_pos = 0;
+            int root_pos = 0;
             File *file;
 
             explicit Storage(File *_file) : file(_file) {}
 
-            size_t assign() {
+            int assign() {
                 ++size;
                 if (st.empty()) {
                     return max_pos = size - 1;
                 }
-                size_t res = st.back();
+                int res = st.back();
                 st.pop_back();
                 return res;
             }
 
-            void destroy(size_t pos) {
+            void destroy(int pos) {
                 --size;
                 st.push_back(pos);
             }
@@ -106,7 +107,7 @@ namespace CrazyDave {
                 file->read(root_pos);
                 st.clear();
                 for (int i = 0; i < max_pos - size + 1; ++i) {
-                    size_t pos;
+                    int pos;
                     file->read(pos);
                     st.push_back(pos);
                 }
@@ -174,6 +175,8 @@ namespace CrazyDave {
                     tmp->keys[i - M / 2 - 1] = n->keys[i];
                 }
                 tmp->children[i - M / 2 - 1] = n->children[i];
+                n->children[i] = nullptr;
+                tmp->children[i - M / 2 - 1]->fa = tmp;
             }
             n->ch_num = M / 2 + 1;
             // Lift keys[M / 2] to n->fa.
@@ -195,18 +198,18 @@ namespace CrazyDave {
         void split_block(TreeNode *n, Block &bk) {
             auto *tmp = new TreeNode{n->fa, 0, node_storage.assign(), block_storage.assign()};
             Block &nx = cache2;
-            for (int i = L / 2; i <= L; ++i) {
-                nx[i - L / 2] = bk[i];
+            for (int i = L - L / 2; i <= L; ++i) {
+                nx[i - L + L / 2] = bk[i];
             }
-            n->size = L / 2;
-            tmp->size = L - L / 2 + 1;
+            n->size = L - L / 2;
+            tmp->size = L / 2 + 1;
             write_block(tmp, nx);
             if (n == root) {
                 root = tmp->fa = n->fa = new TreeNode{nullptr, 1, node_storage.assign()};
                 root->children[0] = n;
                 node_storage.root_pos = root->pos;
             }
-            auto fa = n->fa;
+            auto *fa = n->fa;
             int pos = increase_insert(fa->keys, fa->ch_num - 1, nx[0]);
             insert_at(fa->children, fa->ch_num, pos + 1, tmp);
             ++fa->ch_num;
@@ -216,7 +219,7 @@ namespace CrazyDave {
         }
 
         void check_merge_node(TreeNode *n) {
-            auto fa = n->fa;
+            auto *fa = n->fa;
             int pos = upper_bound(fa->keys, fa->ch_num - 1, n->keys[0]);
             if (pos > 0) {
                 TreeNode *left = fa->children[pos - 1];
@@ -225,6 +228,7 @@ namespace CrazyDave {
                     TreeNode *adopt = left->children[left->ch_num - 1];
                     insert_at(n->keys, n->ch_num - 1, 0, pr);
                     insert_at(n->children, n->ch_num, 0, adopt);
+                    adopt->fa = n;
 
                     pr = left->keys[left->ch_num - 2];
 
@@ -240,6 +244,7 @@ namespace CrazyDave {
                     TreeNode *adopt = right->children[0];
                     insert_at(n->keys, n->ch_num - 1, n->ch_num - 1, pr);
                     insert_at(n->children, n->ch_num, n->ch_num, adopt);
+                    adopt->fa = n;
 
                     pr = right->keys[0];
 
@@ -255,7 +260,7 @@ namespace CrazyDave {
         }
 
         void check_merge_block(TreeNode *n, Block &bk) {
-            auto fa = n->fa;
+            auto *fa = n->fa;
             int pos = upper_bound(fa->keys, fa->ch_num - 1, bk[0]);
             if (pos > 0) {
                 TreeNode *left = fa->children[pos - 1];
@@ -302,11 +307,12 @@ namespace CrazyDave {
         }
 
         void merge_node(TreeNode *n1, TreeNode *n2) { // n1 is on the left of n2.
-            auto fa = n1->fa;
+            auto *fa = n1->fa;
             Pair &pr = n1->keys[0];
             int pos = upper_bound(fa->keys, fa->ch_num - 1, pr);
             for (int i = 0; i <= n2->ch_num - 1; ++i) {
                 n1->children[n1->ch_num + i] = n2->children[i];
+                n1->children[n1->ch_num + i]->fa = n1;
             }
             n1->keys[n1->ch_num - 1] = fa->keys[pos];
             for (int i = 0; i <= n2->ch_num - 2; ++i) {
@@ -339,7 +345,7 @@ namespace CrazyDave {
             }
             n1->size += n2->size;
             Pair &pr = bk1[n1->size - 1];
-            auto fa = n1->fa;
+            auto *fa = n1->fa;
             int pos = upper_bound(fa->keys, fa->ch_num - 1, pr);
             remove_at(fa->keys, fa->ch_num - 1, pos - 1);
             remove_at(fa->children, fa->ch_num, pos);
@@ -374,9 +380,8 @@ namespace CrazyDave {
             read_block(n, bk);
             increase_insert(bk, n->size, pr);
             ++n->size;
-            if (n->size <= L) {
-                write_block(n, bk);
-            } else {
+            write_block(n, bk);
+            if (n->size > L) {
                 split_block(n, bk);
             }
         }
@@ -461,6 +466,42 @@ namespace CrazyDave {
             vector<value_t> res;
             find(root, key, res);
             return std::move(res);
+        }
+
+        void print() {
+            std::queue<TreeNode *> q;
+            std::queue<int> q1;
+            q.push(root);
+            q1.push(1);
+            int cur = 1;
+            while (!q.empty()) {
+                int x1 = q1.front();
+                q1.pop();
+                if (x1 != cur) {
+                    std::cout << "\n";
+                    cur = x1;
+                }
+                auto x = q.front();
+                q.pop();
+                for (int i = 0; i < x->ch_num - 1; ++i) {
+                    std::cout << x->keys[i].key << "," << x->keys[i].val << " ";
+                }
+                if (x->ch_num == 0) {
+                    Block &bk = cache1;
+                    read_block(x, bk);
+                    std::cout << "[";
+                    for (int i = 0; i < x->size; ++i) {
+                        std::cout << bk[i].key << "," << bk[i].val << " ";
+                    }
+                    std::cout << "]";
+                }
+                std::cout << "; ";
+                for (int i = 0; i < x->ch_num; ++i) {
+                    q.push(x->children[i]);
+                    q1.push(x1 + 1);
+                }
+            }
+            std::cout << "\n";
         }
     };
 }
