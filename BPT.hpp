@@ -7,7 +7,7 @@
 
 
 namespace CrazyDave {
-    template<class key_t=String<65>, class value_t= int, const int M = 5, const int L = 228>
+    template<class key_t=String<65>, class value_t= int, const int M = 10, const int L = 228>
     class BPlusTree {
         struct Pair {
             key_t key{};
