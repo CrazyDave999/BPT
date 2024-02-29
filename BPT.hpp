@@ -4,7 +4,7 @@
 #include <cstring>
 #include "vector.hpp"
 #include "utils.hpp"
-#include <queue>
+
 
 namespace CrazyDave {
     template<class key_t=String<65>, class value_t= int, const int M = 5, const int L = 5>
@@ -469,39 +469,39 @@ namespace CrazyDave {
         }
 
         void print() {
-            std::queue<TreeNode *> q;
-            std::queue<int> q1;
-            q.push(root);
-            q1.push(1);
-            int cur = 1;
-            while (!q.empty()) {
-                int x1 = q1.front();
-                q1.pop();
-                if (x1 != cur) {
-                    std::cout << "\n";
-                    cur = x1;
-                }
-                auto x = q.front();
-                q.pop();
-                for (int i = 0; i < x->ch_num - 1; ++i) {
-                    std::cout << x->keys[i].key << "," << x->keys[i].val << " ";
-                }
-                if (x->ch_num == 0) {
-                    Block &bk = cache1;
-                    read_block(x, bk);
-                    std::cout << "[";
-                    for (int i = 0; i < x->size; ++i) {
-                        std::cout << bk[i].key << "," << bk[i].val << " ";
-                    }
-                    std::cout << "]";
-                }
-                std::cout << "; ";
-                for (int i = 0; i < x->ch_num; ++i) {
-                    q.push(x->children[i]);
-                    q1.push(x1 + 1);
-                }
-            }
-            std::cout << "\n";
+//            std::queue<TreeNode *> q;
+//            std::queue<int> q1;
+//            q.push(root);
+//            q1.push(1);
+//            int cur = 1;
+//            while (!q.empty()) {
+//                int x1 = q1.front();
+//                q1.pop();
+//                if (x1 != cur) {
+//                    std::cout << "\n";
+//                    cur = x1;
+//                }
+//                auto x = q.front();
+//                q.pop();
+//                for (int i = 0; i < x->ch_num - 1; ++i) {
+//                    std::cout << x->keys[i].key << "," << x->keys[i].val << " ";
+//                }
+//                if (x->ch_num == 0) {
+//                    Block &bk = cache1;
+//                    read_block(x, bk);
+//                    std::cout << "[";
+//                    for (int i = 0; i < x->size; ++i) {
+//                        std::cout << bk[i].key << "," << bk[i].val << " ";
+//                    }
+//                    std::cout << "]";
+//                }
+//                std::cout << "; ";
+//                for (int i = 0; i < x->ch_num; ++i) {
+//                    q.push(x->children[i]);
+//                    q1.push(x1 + 1);
+//                }
+//            }
+//            std::cout << "\n";
         }
     };
 }
