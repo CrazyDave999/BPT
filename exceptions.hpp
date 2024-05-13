@@ -8,8 +8,8 @@ namespace CrazyDave {
 
     class exception {
     protected:
-        const std::string variant = "";
-        std::string detail = "";
+        const std::string variant;
+        std::string detail;
     public:
         exception() {}
         exception(const exception &ec) : variant(ec.variant), detail(ec.detail) {}

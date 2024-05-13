@@ -5,10 +5,7 @@ int main() {
     std::ios::sync_with_stdio(false);
     int n;
     std::cin >> n;
-    CrazyDave::BPlusTree<CrazyDave::String<65>, int> bpt("node",
-                                                         "node_storage",
-                                                         "block",
-                                                         "block_storage");
+    CrazyDave::BPlusTree<CrazyDave::String<65>, int> bpt("node", "node_storage", "block", "block_storage");
     while (n--) {
         CrazyDave::String<65> op, index;
         int value;
@@ -20,7 +17,7 @@ int main() {
             std::cin >> index >> value;
             bpt.remove(index, value);
         } else if (op[0] == 'p') {
-            bpt.print();
+//            bpt.print(); // debug function
         } else {
             std::cin >> index;
             auto res = bpt.find(index);
@@ -34,5 +31,4 @@ int main() {
         }
     }
     return 0;
-
 }

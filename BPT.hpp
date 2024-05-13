@@ -1,13 +1,13 @@
 #ifndef BPT_BPT_HPP
 #define BPT_BPT_HPP
 
-#include <cstring>
-#include "vector.hpp"
 #include "utils.hpp"
+#include "vector.hpp"
+#include <cstring>
 
 
 namespace CrazyDave {
-    template<class key_t=String<65>, class value_t= int, const int M = 10, const int L = 228>
+    template<class key_t = String<65>, class value_t = int, const int M = 10, const int L = 228>
     class BPlusTree {
         struct Pair {
             key_t key{};
@@ -20,7 +20,7 @@ namespace CrazyDave {
             }
 
             bool operator<(const Pair &rhs) const {
-                if (key != rhs.key)return key < rhs.key;
+                if (key != rhs.key) return key < rhs.key;
                 return val < rhs.val;
             }
 
@@ -35,13 +35,13 @@ namespace CrazyDave {
 
         struct TreeNode;
 
-        struct WTreeNode {
+        struct WTreeNode {// Writable struct for a TreeNode.
             int pos{};
             int ch_num = 0;
             int block_pos = 0;
             int size = 0;
             Pair keys[M];
-            int ch_pos[M + 1]{}; // The position of children's STreeNode in tree_file.
+            int ch_pos[M + 1]{};// The position of children's STreeNode in tree_file.
 
             WTreeNode() = default;
 
@@ -56,11 +56,11 @@ namespace CrazyDave {
         };
 
         struct TreeNode {
-            int pos{}; // The position of this node in tree_file.
+            int pos{};      // The position of this node in tree_file.
             int ch_num = 0; // If ch_num=0, this node is a leaf.
-            int block_pos{}; // The position of data in data_file. Only leaf node available.
-            int size = 0; // Size of block. Only leaf node available.
-            Pair keys[M]; // At most M - 1 keys, leave one.
+            int block_pos{};// The position of data in data_file. Only leaf node available.
+            int size = 0;   // Size of block. Only leaf node available.
+            Pair keys[M];   // At most M - 1 keys, leave one.
             TreeNode *children[M + 1];
             TreeNode *fa = nullptr;
 
@@ -124,8 +124,8 @@ namespace CrazyDave {
             }
         };
 
-        File node_storage_file; // Information of node_storage.
-        File node_file; // Successively storage of WTreeNode.
+        File node_storage_file;// Information of node_storage.
+        File node_file;        // Successively storage of WTreeNode.
         File block_storage_file;
         File block_file;
         TreeNode *root;
@@ -135,7 +135,7 @@ namespace CrazyDave {
         Storage node_storage{&node_storage_file};
         Storage block_storage{&block_storage_file};
 
-        void read_node(TreeNode *&n) { // Use dfs to read the structure of tree in tree_file.
+        void read_node(TreeNode *&n) {// Use dfs to read the structure of tree in tree_file.
             WTreeNode wn;
             node_file.read(wn);
             n = new TreeNode{wn};
@@ -306,7 +306,7 @@ namespace CrazyDave {
             }
         }
 
-        void merge_node(TreeNode *n1, TreeNode *n2) { // n1 is on the left of n2.
+        void merge_node(TreeNode *n1, TreeNode *n2) {// n1 is on the left of n2.
             auto *fa = n1->fa;
             Pair &pr = n1->keys[0];
             int pos = upper_bound(fa->keys, fa->ch_num - 1, pr);
@@ -319,7 +319,7 @@ namespace CrazyDave {
                 n1->keys[n1->ch_num + i] = n2->keys[i];
             }
 
-            n1->ch_num += n2->ch_num; // 2(M - M / 2) - 1 <= M
+            n1->ch_num += n2->ch_num;// 2(M - M / 2) - 1 <= M
 
             remove_at(fa->keys, fa->ch_num - 1, pos);
             remove_at(fa->children, fa->ch_num, pos + 1);
@@ -425,8 +425,8 @@ namespace CrazyDave {
 
     public:
         BPlusTree(const char *node_str1, const char *node_str2, const char *block_str1, const char *block_str2)
-                : node_file(node_str1), node_storage_file(node_str2), block_file(block_str1),
-                  block_storage_file(block_str2) {
+            : node_file(node_str1), node_storage_file(node_str2), block_file(block_str1),
+              block_storage_file(block_str2) {
             node_file.open();
             node_storage_file.open();
             block_file.open();
@@ -468,42 +468,42 @@ namespace CrazyDave {
             return std::move(res);
         }
 
-        void print() {
-//            std::queue<TreeNode *> q;
-//            std::queue<int> q1;
-//            q.push(root);
-//            q1.push(1);
-//            int cur = 1;
-//            while (!q.empty()) {
-//                int x1 = q1.front();
-//                q1.pop();
-//                if (x1 != cur) {
-//                    std::cout << "\n";
-//                    cur = x1;
-//                }
-//                auto x = q.front();
-//                q.pop();
-//                for (int i = 0; i < x->ch_num - 1; ++i) {
-//                    std::cout << x->keys[i].key << "," << x->keys[i].val << " ";
-//                }
-//                if (x->ch_num == 0) {
-//                    Block &bk = cache1;
-//                    read_block(x, bk);
-//                    std::cout << "[";
-//                    for (int i = 0; i < x->size; ++i) {
-//                        std::cout << bk[i].key << "," << bk[i].val << " ";
-//                    }
-//                    std::cout << "]";
-//                }
-//                std::cout << "; ";
-//                for (int i = 0; i < x->ch_num; ++i) {
-//                    q.push(x->children[i]);
-//                    q1.push(x1 + 1);
-//                }
-//            }
-//            std::cout << "\n";
+        void print() {// Debug function. Print the whole tree.
+                      //            std::queue<TreeNode *> q;
+                      //            std::queue<int> q1;
+                      //            q.push(root);
+                      //            q1.push(1);
+                      //            int cur = 1;
+                      //            while (!q.empty()) {
+                      //                int x1 = q1.front();
+                      //                q1.pop();
+                      //                if (x1 != cur) {
+                      //                    std::cout << "\n";
+                      //                    cur = x1;
+                      //                }
+                      //                auto x = q.front();
+                      //                q.pop();
+                      //                for (int i = 0; i < x->ch_num - 1; ++i) {
+                      //                    std::cout << x->keys[i].key << "," << x->keys[i].val << " ";
+                      //                }
+                      //                if (x->ch_num == 0) {
+                      //                    Block &bk = cache1;
+                      //                    read_block(x, bk);
+                      //                    std::cout << "[";
+                      //                    for (int i = 0; i < x->size; ++i) {
+                      //                        std::cout << bk[i].key << "," << bk[i].val << " ";
+                      //                    }
+                      //                    std::cout << "]";
+                      //                }
+                      //                std::cout << "; ";
+                      //                for (int i = 0; i < x->ch_num; ++i) {
+                      //                    q.push(x->children[i]);
+                      //                    q1.push(x1 + 1);
+                      //                }
+                      //            }
+                      //            std::cout << "\n";
         }
     };
-}
+}// namespace CrazyDave
 
-#endif //BPT_BPT_HPP
+#endif//BPT_BPT_HPP
