@@ -2,7 +2,7 @@
 #define BPT_UTILS_HPP
 
 #include <fstream>
-
+#include <cstring>
 using std::fstream;
 
 namespace CrazyDave {
